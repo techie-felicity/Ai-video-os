@@ -9,32 +9,36 @@ import os
 import json
 from typing import Any, Dict
 
-import anthropic
+from openai import OpenAI
 
 _client = None
 
 
-def get_llm_client() -> anthropic.Anthropic:
+def get_llm_client() -> OpenAI:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        _client = OpenAI(
+            api_key=os.environ["GROQ_API_KEY"],
+            base_url="https://api.groq.com/openai/v1",
+        )
     return _client
 
 
-def call_reasoning_model(system_prompt: str, user_prompt: str, model: str = "claude-sonnet-5") -> Dict[str, Any]:
+def call_reasoning_model(system_prompt: str, user_prompt: str, model: str = "llama-3.3-70b-versatile") -> Dict[str, Any]:
     """
     Used by ScriptAgent, EditorAgent, StoryboardAgent, VisualAgent for structured
     JSON reasoning. Expects the model to return ONLY JSON (enforced via prompt).
     """
     client = get_llm_client()
-    resp = client.messages.create(
+    resp = client.chat.completions.create(
         model=model,
         max_tokens=4000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
     )
-    text = "".join(block.text for block in resp.content if block.type == "text")
-    text = text.strip()
+    text = resp.choices[0].message.content.strip()
     if text.startswith("```"):
         text = text.strip("`")
         text = text.split("json", 1)[-1] if text.lower().startswith("json") else text
