@@ -21,7 +21,7 @@ def get_llm_client() -> anthropic.Anthropic:
     return _client
 
 
-def call_reasoning_model(system_prompt: str, user_prompt: str, model: str = "claude-sonnet-4-6") -> Dict[str, Any]:
+def call_reasoning_model(system_prompt: str, user_prompt: str, model: str = "claude-sonnet-5") -> Dict[str, Any]:
     """
     Used by ScriptAgent, EditorAgent, StoryboardAgent, VisualAgent for structured
     JSON reasoning. Expects the model to return ONLY JSON (enforced via prompt).
